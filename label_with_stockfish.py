@@ -74,14 +74,14 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--in_jsonl", required=True, help="Input file of FENs from position_sampler.py")
     ap.add_argument("--engine_path", default="stockfish")
-    ap.add_argument("--out_parquet", default="data/labeled_raw.parquet")
+    ap.add_argument("--out_parquet", default="data/output/normal/labeled_raw.parquet")
     ap.add_argument("--depth", type=int, default=14)
     ap.add_argument("--movetime_ms", type=int, default=None)
     ap.add_argument("--multipv", type=int, default=3)
-    ap.add_argument("--threads", type=int, default=2)
+    ap.add_argument("--threads", type=int, default=4)
     ap.add_argument("--hash", type=int, default=128)
     ap.add_argument("--procs", type=int, default=max(1, mp.cpu_count()//2))
-    ap.add_argument("--flush_interval", type=int, default=1024, help="Write partial results every N evaluations")
+    ap.add_argument("--flush_interval", type=int, default=4000, help="Write partial results every N evaluations")
     args = ap.parse_args()
 
     # Read all FENs

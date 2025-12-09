@@ -4,7 +4,7 @@ from tqdm import tqdm
 
 import bz2, gzip
 
-PHASE_PLY_THRESH = (10, 28)  # opening is the first 10 moves, middle game the next 18, endgame after that
+PHASE_PLY_THRESH = (10, 28)  # opening is the first 8 moves, middle game the next 17, endgame after that
 
 def phase_from_ply(fullmove_number, ply_count):
     if ply_count < PHASE_PLY_THRESH[0]:
@@ -30,7 +30,6 @@ def open_any(path: str):
     return open(path, "r", encoding="utf-8", errors="ignore")
 
 def header_passes_filters(headers, min_elo, require_standard, min_clock_seconds):
-    # Allow for min_elo check, parsing helper as headers vary based on source of PGN
     def parse_int(x):
         try:
             return int(x)
@@ -92,7 +91,6 @@ def iter_positions_from_game(game, step=2, max_per_game=8, rng=None):
 def reservoir_sample_write(stream_iter, out_path, k=None, shard_size=None, seed=0):
     rng = random.Random(seed)
     if k is None:
-        # direct stream to shards
         base = out_path
         count = 0
         shard_idx = 0
@@ -162,7 +160,6 @@ def stream_positions_from_paths(paths, step, max_per_game, game_stride, max_game
                         break
                     gi += 1
                     pbar.update(1)
-                    # stride through games (e.g., take every 3rd game)
                     if game_stride and (gi - 1) % game_stride != 0:
                         continue
                     if not header_passes_filters(game.headers, min_elo, require_standard, min_clock_seconds):
@@ -178,17 +175,17 @@ def main():
     src = ap.add_mutually_exclusive_group(required=True)
     src.add_argument("--pgn_file", help="Single PGN (supports .zst/.bz2/.gz)")
     src.add_argument("--pgn_glob", help="Glob for multiple PGNs")
-    ap.add_argument("--out", default="data/positions_raw.jsonl")
+    ap.add_argument("--out", default="data/normal/positions_raw.jsonl")
     ap.add_argument("--step", type=int, default=1, help="Sample every N plies within a game")
-    ap.add_argument("--max_per_game", type=int, default=8, help="Max positions sampled per game")
+    ap.add_argument("--max_per_game", type=int, default=10, help="Max positions sampled per game")
     ap.add_argument("--game_stride", type=int, default=1, help="Take every Nth game (default 1 = every game)")
     ap.add_argument("--max_games", type=int, default=None, help="Stop after this many accepted games")
     ap.add_argument("--seed", type=int, default=0)
 
     # Filtering
-    ap.add_argument("--min_elo", type=int, default=None, help="Require both players >= this Elo")
+    ap.add_argument("--min_elo", type=int, default=800, help="Require both players >= this Elo")
     ap.add_argument("--require_standard", action="store_true", help="Filter Variant to 'Standard'")
-    ap.add_argument("--min_clock_seconds", type=int, default=None, help="Filter games with base time >= seconds")
+    ap.add_argument("--min_clock_seconds", type=int, default=30, help="Filter games with base time >= seconds")
 
     # Output control
     ap.add_argument("--reservoir", type=int, default=None, help="Keep exactly K positions via reservoir sampling")
